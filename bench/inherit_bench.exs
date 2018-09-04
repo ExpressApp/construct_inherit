@@ -1,5 +1,5 @@
-defmodule Construct.InheritTest do
-  use ExUnit.Case
+defmodule InheritBench do
+  use Benchfella
 
   defmodule Test1 do
     use Construct
@@ -42,18 +42,34 @@ defmodule Construct.InheritTest do
     end
   end
 
-  test "greets the world" do
-    assert {:ok, %Test1{a: 1, b: %{inner: "test1"}}}
-        == Test1.make(a: 1)
+  defmodule Test5 do
+    use Test4 do
+      field :b, :string, default: "test5"
+    end
+  end
 
-    assert {:ok, %Test2{a: 1, b: %{inner: "test2"}}}
-        == Test2.make(a: 1)
+  bench "Test1" do
+    {:ok, %Test1{a: 1, b: %{inner: "test1"}}}
+      == Test1.make(a: 1)
+  end
 
-    assert {:ok, %Test3{a: 1, c: %{inner: 42}, b: %{inner: "test3"}}}
-        == Test3.make(a: 1)
+  bench "Test2" do
+    {:ok, %Test2{a: 1, b: %{inner: "test2"}}}
+      == Test2.make(a: 1)
+  end
 
-    assert {:ok, %Test4{a: 1, c: %{inner: 42}, b: %{inner: "test4"}}}
-        == Test4.make(a: 1)
+  bench "Test3" do
+    {:ok, %Test3{a: 1, c: %{inner: 42}, b: %{inner: "test3"}}}
+      == Test3.make(a: 1)
+  end
 
+  bench "Test4" do
+    {:ok, %Test4{a: 1, c: %{inner: 42}, b: %{inner: "test4"}}}
+      == Test4.make(a: 1)
+  end
+
+  bench "Test5" do
+    {:ok, %Test5{a: 1, c: %{inner: 42}, b: %{inner: "test5"}}}
+      == Test5.make(a: 1)
   end
 end
