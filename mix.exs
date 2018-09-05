@@ -27,7 +27,7 @@ defmodule Construct.Inherit.MixProject do
 
   defp deps do
     [
-      {:construct, "~> 1.0"},
+      {:construct, "~> 1.1"},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:benchfella, "~> 0.3.5", only: :dev},
     ]
