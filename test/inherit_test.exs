@@ -9,6 +9,9 @@ defmodule InheritTest do
       field :a, :integer
       field :b do
         field :c, :map, default: nil
+        field :d do
+          field :e, :string, default: "deeper"
+        end
       end
     end
   end
@@ -66,11 +69,11 @@ defmodule InheritTest do
   end
 
   test "fields overriding" do
-    assert {:ok, %Test00{a: 1, b: %Test00.B{c: nil}}}
-        == Test00.make(a: 1, b: %{})
+    assert {:ok, %Test00{a: 1, b: %Test00.B{c: nil, d: %Test00.B.D{e: "deeper"}}}}
+        == Test00.make(a: 1, b: %{d: %{}})
 
-    assert {:ok, %Test01{a: 1, b: %Test01.B{c: %Test01.B.C{bar: 0, foo: "test"}}}}
-        == Test01.make(a: 1, b: %{c: %{foo: "test"}})
+    assert {:ok, %Test01{a: 1, b: %Test01.B{c: %Test01.B.C{bar: 0, foo: "test"}, d: %Test00.B.D{e: "deeper"}}}}
+        == Test01.make(a: 1, b: %{c: %{foo: "test"}, d: %{}})
 
   end
 

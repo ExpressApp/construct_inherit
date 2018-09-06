@@ -13,9 +13,8 @@ defmodule Construct.Inherit do
     quote do
       use Construct
 
+      alias unquote(base), as: Base_
       import Construct.Inherit
-
-      @base unquote(base)
 
       if unquote(block != nil) do
         override do
@@ -44,7 +43,7 @@ defmodule Construct.Inherit do
   defmacro override([do: block]) do
     quote do
       structure do
-        include @base
+        include(unquote(make_base_module_name_ast([])))
         unquote(block)
       end
     end
@@ -53,19 +52,43 @@ defmodule Construct.Inherit do
   defmacro override(path, [do: block]) do
     quote do
       structure do
-        include @base
-        unquote(path_ast(path, block))
+        unquote(path_ast(path, [], block))
       end
     end
   end
 
-  defp path_ast([], block) do
-    block
+  defp path_ast([], as, block) do
+    {:__block__, [], [
+      include_base_ast(as),
+      block
+    ]}
   end
-  defp path_ast([path|rest], block) do
-    {:field, [], [path, [do: path_ast(rest, block)]]}
+  defp path_ast([path|rest], as, block) do
+    current_as = as ++ [path]
+
+    {:__block__, [], [
+      include_base_ast(as),
+      {:field, [], [path, [do: path_ast(rest, current_as, block)]]}
+    ]}
   end
-  defp path_ast(path, block) when is_atom(path) do
-    {:field, [], [path, [do: block]]}
+  defp path_ast(path, as, block) when is_atom(path) do
+    {:field, [], [path, [do: path_ast([], as, block)]]}
+  end
+
+  defp include_base_ast(nest) do
+    module_name_ast = make_base_module_name_ast(Enum.map(nest, &upcase_atom/1))
+
+    quote do
+      if Code.ensure_compiled?(unquote(module_name_ast)), do:
+        include(unquote(module_name_ast))
+    end
+  end
+
+  defp upcase_atom(atom) do
+    atom |> to_string |> Macro.camelize |> String.to_atom
+  end
+
+  defp make_base_module_name_ast(atoms) when is_list(atoms) do
+    {:__aliases__, [], [:Base_ | atoms]}
   end
 end
