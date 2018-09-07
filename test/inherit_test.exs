@@ -25,6 +25,26 @@ defmodule InheritTest do
     end
   end
 
+  defmodule Test02 do
+    use Test00
+
+    override do
+      field :a, :integer, default: 42
+    end
+  end
+
+  defmodule Test03 do
+    use Test00
+
+    override [:b, :d, :e], :integer
+  end
+
+  defmodule Test04 do
+    use Test00
+
+    override [:b, :d, :e], :string, default: "overridden"
+  end
+
   defmodule Test10 do
     use Construct
     use Construct.Inherit, make_inherit: true
@@ -68,27 +88,52 @@ defmodule InheritTest do
     end
   end
 
-  test "fields overriding" do
-    assert {:ok, %Test00{a: 1, b: %Test00.B{c: nil, d: %Test00.B.D{e: "deeper"}}}}
-        == Test00.make(a: 1, b: %{d: %{}})
+  describe "fields overriding" do
+    test "ensure that root structure is valid" do
+      assert {:ok, %Test00{a: 1, b: %Test00.B{c: nil, d: %Test00.B.D{e: "deeper"}}}}
+          == Test00.make(a: 1, b: %{d: %{}})
+    end
 
-    assert {:ok, %Test01{a: 1, b: %Test01.B{c: %Test01.B.C{bar: 0, foo: "test"}, d: %Test00.B.D{e: "deeper"}}}}
-        == Test01.make(a: 1, b: %{c: %{foo: "test"}, d: %{}})
+    test "override nested fields" do
+      assert {:ok, %Test01{a: 1, b: %Test01.B{c: %Test01.B.C{bar: 0, foo: "test"}, d: %Test00.B.D{e: "deeper"}}}}
+          == Test01.make(a: 1, b: %{c: %{foo: "test"}, d: %{}})
+    end
 
+    test "override root fields" do
+      assert {:ok, %Test02{a: 42, b: %Test00.B{c: %{foo: "test"}, d: %Test00.B.D{e: "deeper"}}}}
+          == Test02.make(b: %{c: %{foo: "test"}, d: %{}})
+    end
+
+    test "override single nested field with type only" do
+      assert {:ok, %Test03{a: 1, b: %Test03.B{c: nil, d: %Test03.B.D{e: 42}}}}
+          == Test03.make(a: 1, b: %{d: %{e: 42}})
+    end
+
+    test "override single nested field with type and options" do
+      assert {:ok, %Test04{a: 1, b: %Test04.B{c: nil, d: %Test04.B.D{e: "overridden"}}}}
+          == Test04.make(a: 1, b: %{d: %{}})
+    end
   end
 
-  test "make inheritance" do
-    assert {:ok, %Test10{a: 1, b: %{inner: "test10"}}}
-        == Test10.make(a: 1)
+  describe "make inheritance" do
+    test "level 0" do
+      assert {:ok, %Test10{a: 1, b: %{inner: "test10"}}}
+          == Test10.make(a: 1)
+    end
 
-    assert {:ok, %Test11{a: 1, b: %{inner: "test11"}}}
-        == Test11.make(a: 1)
+    test "level 1" do
+      assert {:ok, %Test11{a: 1, b: %{inner: "test11"}}}
+          == Test11.make(a: 1)
+    end
 
-    assert {:ok, %Test12{a: 1, c: %{inner: 42}, b: %{inner: "test12"}}}
-        == Test12.make(a: 1)
+    test "level 2" do
+      assert {:ok, %Test12{a: 1, c: %{inner: 42}, b: %{inner: "test12"}}}
+          == Test12.make(a: 1)
+    end
 
-    assert {:ok, %Test13{a: 1, c: %{inner: 42}, b: %{inner: "test13"}}}
-        == Test13.make(a: 1)
-
+    test "level 3" do
+      assert {:ok, %Test13{a: 1, c: %{inner: 42}, b: %{inner: "test13"}}}
+          == Test13.make(a: 1)
+    end
   end
 end

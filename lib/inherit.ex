@@ -41,6 +41,22 @@ defmodule Construct.Inherit do
   end
 
   defmacro override([do: block]) do
+    override_root_fields(block)
+  end
+
+  defmacro override(path, [do: block]) do
+    override_nested_field(path, block)
+  end
+
+  defmacro override(path, type) do
+    override_single_field_only(path, type, [])
+  end
+
+  defmacro override(path, type, opts) do
+    override_single_field_only(path, type, opts)
+  end
+
+  defp override_root_fields(block) do
     quote do
       structure do
         include(unquote(make_base_module_name_ast([])))
@@ -49,10 +65,22 @@ defmodule Construct.Inherit do
     end
   end
 
-  defmacro override(path, [do: block]) do
+  defp override_nested_field(path, block) do
     quote do
       structure do
         unquote(path_ast(path, [], block))
+      end
+    end
+  end
+
+  defp override_single_field_only(path, type, opts) do
+    {name, path} = List.pop_at(path, -1)
+
+    field_ast = quote do: field(unquote(name), unquote(type), unquote(opts))
+
+    quote do
+      structure do
+        unquote(path_ast(path, [], field_ast))
       end
     end
   end
